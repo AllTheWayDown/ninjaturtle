@@ -1,0 +1,2 @@
+MOVE = "MOVE"
+ROTATE = "ROTATE"
