@@ -2,25 +2,30 @@ from __future__ import division
 
 from math import sin, cos, radians
 
+# model[0] - X position
+# model[1] - Y position
+# model[2] - X scale
+# model[3] - Y scale
+# model[4] - angle/orientation in degrees
+# model[5] - speed
+# model[6] - cos(radians(angle)) - a cache
+# model[7] - sin(radians(angle)) - a cache
 
 def move(data, distance):
-    r = radians(data[2])
-    data[0] += cos(r) * distance
-    data[1] += sin(r) * distance
+    data[0] += data[6] * distance
+    data[1] += data[7] * distance
 
 def rotate(data, angle):
-    data[2] += angle
+    data[4] += angle
+    theta = radians(data[4])
+    data[6] = cos(theta)
+    data[7] = sin(theta)
 
-def interpolate_linear_move(distance, speed):
-    # taken from turtle.py
-    steps = abs(distance) // int(3 * (1.1 ** speed) * speed)
-    delta = distance / steps
-    return [delta] * steps
+def move_with_heading(data, values):
+    distance, heading = values
+    theta = radians(heading)
+    data[0] += cos(theta) * distance
+    data[1] += sin(theta) * distance
 
-def interpolate_linear_rotation(angle, speed):
-    anglevel = 3.0 * speed
-    steps = int(abs(angle) / anglevel)
-    delta = angle / steps
-    return [delta] * steps
 
 

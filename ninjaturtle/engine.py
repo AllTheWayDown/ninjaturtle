@@ -1,56 +1,123 @@
+from __future__ import division, print_function, absolute_import
+from collections import deque
+import functools
 import itertools
+from time import time, sleep
 from random import shuffle
+
+try:
+    import _vector as vector
+except ImportError:
+    import vector
 
 from common import (
     MOVE,
     ROTATE,
+    TURTLE_DATA_SIZE,
+    DEFAULT_TIME_DELTA,
 )
-from turtle import TurtleModel
-import vector
 
-_ENGINE = None
+from render import DummyRender
 
 
-def get_engine():
-    return _ENGINE
+class TurtleModel():
+    """A turtle modelled in 2D space.
 
-def run_until_empty():
-    _ENGINE.run_until_empty()
+    The data attribute exposes a list like interface for turtle data that is
+    used for maths calulations and rendering. Uses normal attribute for other
+    data (e.g. shape)
+
+    model[0] - X position
+    model[1] - Y position
+    model[2] - X scale
+    model[3] - Y scale
+    model[4] - angle/orientation in degrees
+    model[5] - speed
+    model[6] - cos(radians(angle)) - a cache
+    model[7] - sin(radians(angle)) - a cache
+
+    The idea is to support memoryview slices of stdlib array or numpy arrays,
+    for good performance with OpenGL rendering down the line. This is not
+    exposed directly to the user - just the NinjaTurtle object and math
+    functions.
+
+    Convienience properties are slow causing ~3x speed penalty for get/set, and
+    turtle model calculations are the slowest part of the whole thing.
+    """
+
+    DEFAULT_TURTLE = [
+        0.0,  # X
+        0.0,  # Y
+        1.0,  # scale x
+        1.0,  # scale y
+        0.0,  # angle
+        5.0,  # speed
+        1.0,  # cos angle
+        0.0,  # sin angle
+    ]
 
 
-class DummyRender(object):
-    def render(self):
-        pass
+    def __init__(self, data):
+        self.data = data
+        self.actions = deque()
+        self.reset()
+        self.shape = 'classic'
+
+    def reset(self):
+        self.data[:] = self.DEFAULT_TURTLE
+        self.actions.clear()
+
+    def queue_action(self, action, value, goal=None):
+        self.actions.append((action, value, goal))
+
+    def __str__(self):
+        return "TurtleModel<({:.1f},{:.1f}), {:.1f}>".format(
+            self.data[0], self.data[1], self.data[4])
+
+
 
 class Engine(object):
 
-    def __init__(self, animator=None, renderer=None):
-        if animator is None:
-            animator = LinearAnimator()
+    ACTIONS = {
+        MOVE: vector.move,
+        ROTATE: vector.rotate,
+    }
+
+    def __init__(self, renderer=None):
         if renderer is None:
             renderer = DummyRender()
         self.renderer = renderer
-        self.animator = animator
         self.turtles = []
+        self.actions = []
 
-    def create_turtle(self):
-        data = [0, 0, 0, 0]
-        model = TurtleModel(self, data)
+    def create_model(self):
+        data = self.renderer.create_turtle_data()
+        model = TurtleModel(data)
         self.turtles.append(model)
         return model
 
-    def tick(self):
-        """run all the model calculations for a tick"""
+    def tick(self, dt):
+        """run all the model calculations for dt seconds"""
 
         shuffle(self.turtles)
         updated = False
+        actions = self.ACTIONS
+
         for turtle in self.turtles:
-            action = value = None
-            if turtle.frames:
-                action, value = turtle.frames.popleft()
-            if action is not None:
+            if turtle.actions:
                 updated = True
-                getattr(turtle, action)(value)
+                action, step, goal = turtle.actions.popleft()
+                value = step * dt
+
+                # are more steps needed to reach the goal
+                if goal is not None:
+                    if abs(value) >= abs(goal) - 0.01:
+                        value = goal
+                    else:
+                        turtle.actions.appendleft((action, step, goal - value))
+
+                # actually move the model
+                actions[action](turtle.data, value)
 
         return updated
 
@@ -58,26 +125,27 @@ class Engine(object):
         updated = True
         tick = self.tick
         render = self.renderer.render
+        freq = DEFAULT_TIME_DELTA
+        last = time() - DEFAULT_TIME_DELTA
         while updated:
-            updated = tick()
+            ts = time()
+            dt = ts - last
+            last = ts
+            updated = tick(dt)
             if updated:
-                render()
+                render(self)
+            elapsed = time() - ts
+            if elapsed < freq:
+                sleep(freq - elapsed)
 
 
+ENGINE = Engine()
 
-class LinearAnimator(object):
-    move_iter = itertools.repeat(MOVE)
-    rotate_iter = itertools.repeat(ROTATE)
+def get_engine():
+    return ENGINE
 
-    def interpolate(self, action, value, speed):
-        if action == MOVE:
-            return zip(self.move_iter,
-                       vector.interpolate_linear_move(value, speed))
-        elif action == ROTATE:
-            return zip(self.rotate_iter,
-                       vector.interpolate_linear_rotation(value, speed))
-
-_ENGINE = Engine()
+def run_until_empty():
+    ENGINE.run_until_empty()
 
 
 
