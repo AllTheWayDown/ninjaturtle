@@ -48,8 +48,8 @@ class TurtleModel():
     DEFAULT_TURTLE = [
         0.0,  # X
         0.0,  # Y
-        1.0,  # scale x
-        1.0,  # scale y
+        15.0,  # scale x
+        15.0,  # scale y
         0.0,  # angle
         5.0,  # speed
         1.0,  # cos angle
@@ -64,15 +64,18 @@ class TurtleModel():
         self.shape = 'classic'
 
     def reset(self):
-        self.data[:] = self.DEFAULT_TURTLE
+        for i, value in zip(range(TURTLE_DATA_SIZE), self.DEFAULT_TURTLE):
+            self.data[i] = value
         self.actions.clear()
 
     def queue_action(self, action, value, goal=None):
         self.actions.append((action, value, goal))
 
     def __str__(self):
-        return "TurtleModel<({:.1f},{:.1f}), {:.1f}>".format(
+        return "TurtleModel({:.2f},{:.2f}):{:.2f})".format(
             self.data[0], self.data[1], self.data[4])
+
+    __repr__ = __str__
 
 
 

@@ -99,9 +99,9 @@ class NinjaTurtle(object):
 
 def interactive(func):
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        func(*args, **kwargs)
-        engine.run_until_empty()
+    def wrapper(self, *args, **kwargs):
+        func(self, *args, **kwargs)
+        self.engine.run_until_empty()
     return wrapper
 
 
