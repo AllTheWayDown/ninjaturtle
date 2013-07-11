@@ -37,8 +37,9 @@ class TurglesRenderer(object):
         return view
 
     def render(self, engine):
-        self.renderer.render(self.turtles, self.num_turtles)
-        with measure('flip'):
-            self.renderer.window.flip()
+        with measure('full render'):
+            self.renderer.render(self.turtles, self.num_turtles)
+            with measure('flip'):
+                self.renderer.window.flip()
 
 
