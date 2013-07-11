@@ -3,7 +3,7 @@ from turtle import *
 
 
 from render import TurglesRenderer
-tr = TurglesRenderer(4)
+tr = TurglesRenderer(4, shape='turtle')
 
 ENGINE = Engine(renderer=tr)
 

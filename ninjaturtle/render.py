@@ -14,16 +14,18 @@ class DummyRender(object):
         return [0] * TURTLE_DATA_SIZE
 
 from turgles.renderer import Renderer
+from turgles.util import measure
 
 class TurglesRenderer(object):
 
-    def __init__(self, capacity):
+    def __init__(self, capacity, shape='classic'):
         self.capacity = capacity
         self.turtles = array('f', [0] * capacity * TURTLE_DATA_SIZE)
         self.view = memoryview(self.turtles)
         self.num_turtles = 0
 
         self.renderer = Renderer(800, 800,
+            shape=shape,
             vertex_shader='../../turgles/turgles/' + Renderer.vertex_shader,
             fragment_shader='../../turgles/turgles/' + Renderer.fragment_shader,
         )
@@ -36,6 +38,7 @@ class TurglesRenderer(object):
 
     def render(self, engine):
         self.renderer.render(self.turtles, self.num_turtles)
-        self.renderer.window.flip()
+        with measure('flip'):
+            self.renderer.window.flip()
 
 
