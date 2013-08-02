@@ -1,19 +1,20 @@
 import os
 from setuptools import setup, find_packages
 
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name = "ninjaturtle",
-    version = "0.1",
-    author = "Simon Davy",
-    author_email = "bloodearnest@gmail.com",
-    description = ("A re-implementation of python stdlib's turtle module"),
-    license = "MIT",
-    keywords = "turtle education kids",
-    url = "https://github.com/AllTheWayDown/ninjaturtle",
-    packages=find_packages(),
+    name="ninjaturtle",
+    version="0.1",
+    author="Simon Davy",
+    author_email="bloodearnest@gmail.com",
+    description=("A re-implementation of python stdlib's turtle module"),
+    license="MIT",
+    keywords="turtle education kids",
+    url="https://github.com/AllTheWayDown/ninjaturtle",
+    packages=find_packages(exclude=['tests']),
     long_description=read('README.rst'),
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -27,4 +28,5 @@ setup(
         "Topic :: Education",
         "Topic :: Games/Entertainment :: Simulation",
     ],
+    test_suite="ninjaturtle.tests"
 )

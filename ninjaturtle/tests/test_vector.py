@@ -1,9 +1,8 @@
 import unittest
 from math import sin, cos, radians
 
-import vector
-from turtle import TurtleModel
-
+from ninjaturtle import vector
+from ninjaturtle.engine import TurtleModel
 
 
 class VectorTestCase(unittest.TestCase):
@@ -14,15 +13,15 @@ class VectorTestCase(unittest.TestCase):
 
     def test_rotate_90(self):
         vector.rotate(self.data, 90)
-        self.assertAlmostEqual(self.data[2], 90)
-        self.assertAlmostEqual(self.data[5], cos(radians(90)))
-        self.assertAlmostEqual(self.data[6], sin(radians(90)))
+        self.assertAlmostEqual(self.data[4], 90)
+        self.assertAlmostEqual(self.data[6], cos(radians(90)))
+        self.assertAlmostEqual(self.data[7], sin(radians(90)))
 
     def test_rotate_minus_90(self):
         vector.rotate(self.data, -90)
-        self.assertAlmostEqual(self.data[2], -90)
-        self.assertAlmostEqual(self.data[5], cos(radians(-90)))
-        self.assertAlmostEqual(self.data[6], sin(radians(-90)))
+        self.assertAlmostEqual(self.data[4], -90)
+        self.assertAlmostEqual(self.data[6], cos(radians(-90)))
+        self.assertAlmostEqual(self.data[7], sin(radians(-90)))
 
     def test_move_forwards_0_degrees(self):
         vector.move(self.data, 1)
@@ -57,4 +56,3 @@ class VectorTestCase(unittest.TestCase):
         vector.move(self.data, -1)
         self.assertAlmostEqual(self.data[0], -0.7071067811)
         self.assertAlmostEqual(self.data[1], -0.7071067811)
-

@@ -1,23 +1,21 @@
 from __future__ import division, print_function, absolute_import
 from collections import deque
-import functools
-import itertools
 from time import time, sleep
 from random import shuffle
 
 try:
-    import _vector as vector
+    from ninjaturtle import _vector as vector
 except ImportError:
-    import vector
+    from ninjaturtle import vector
 
-from common import (
+from ninjaturtle.common import (
     MOVE,
     ROTATE,
     TURTLE_DATA_SIZE,
     DEFAULT_TIME_DELTA,
 )
 
-from render import DummyRender
+from ninjaturtle.render import DummyRender
 
 
 class TurtleModel():
@@ -27,19 +25,22 @@ class TurtleModel():
     used for maths calulations and rendering. Uses normal attribute for other
     data (e.g. shape)
 
-    model[0] - X position
-    model[1] - Y position
-    model[2] - X scale
-    model[3] - Y scale
-    model[4] - angle/orientation in degrees
-    model[5] - speed
-    model[6] - cos(radians(angle)) - a cache
-    model[7] - sin(radians(angle)) - a cache
+    model[0]  - X position
+    model[1]  - Y position
+    model[2]  - X scale
+    model[3]  - Y scale
+    model[4]  - angle/orientation in degrees
+    model[5]  - speed
+    model[6]  - cos(radians(angle)) - a cache
+    model[7]  - sin(radians(angle)) - a cache
+    model[8]  - red
+    model[9]  - green
+    model[10] - blue
+    model[11] - alpha
 
-    The idea is to support memoryview slices of stdlib array or numpy arrays,
-    for good performance with OpenGL rendering down the line. This is not
-    exposed directly to the user - just the NinjaTurtle object and math
-    functions.
+    The reason of using a list like interface is performance with OpenGL.
+    This interface is not exposed directly to the user - just the NinjaTurtle
+    object and math functions.
 
     Convienience properties are slow causing ~3x speed penalty for get/set, and
     turtle model calculations are the slowest part of the whole thing.
@@ -48,20 +49,25 @@ class TurtleModel():
     DEFAULT_TURTLE = [
         0.0,  # X
         0.0,  # Y
-        15.0,  # scale x
-        15.0,  # scale y
+        1.0,  # scale x
+        1.0,  # scale y
         0.0,  # angle
-        5.0,  # speed
+        3.0,  # speed
         1.0,  # cos angle
         0.0,  # sin angle
+        0.0,  # r
+        0.0,  # g
+        0.0,  # b
+        1.0,  # alpha
     ]
+    DEFAULT_SHAPE = 'classic'
 
-
-    def __init__(self, data):
+    def __init__(self, id, data):
+        self.id = id
         self.data = data
         self.actions = deque()
         self.reset()
-        self.shape = 'classic'
+        self.shape = self.DEFAULT_SHAPE
 
     def reset(self):
         for i, value in zip(range(TURTLE_DATA_SIZE), self.DEFAULT_TURTLE):
@@ -72,11 +78,10 @@ class TurtleModel():
         self.actions.append((action, value, goal))
 
     def __str__(self):
-        return "TurtleModel({:.2f},{:.2f}):{:.2f})".format(
+        return "TurtleModel({:.1f},{:.1f}):{:.1f})".format(
             self.data[0], self.data[1], self.data[4])
 
     __repr__ = __str__
-
 
 
 class Engine(object):
@@ -94,8 +99,11 @@ class Engine(object):
         self.actions = []
 
     def create_model(self):
-        data = self.renderer.create_turtle_data()
-        model = TurtleModel(data)
+        id, data = self.renderer.create_turtle_data(
+            TurtleModel.DEFAULT_SHAPE,
+            TurtleModel.DEFAULT_TURTLE,
+        )
+        model = TurtleModel(id, data)
         self.turtles.append(model)
         return model
 
@@ -125,18 +133,21 @@ class Engine(object):
         return updated
 
     def run_until_empty(self):
+        # TODO use a proper loop
         updated = True
         tick = self.tick
         render = self.renderer.render
         freq = DEFAULT_TIME_DELTA
         last = time() - DEFAULT_TIME_DELTA
+        first = True
         while updated:
             ts = time()
             dt = ts - last
             last = ts
             updated = tick(dt)
-            if updated:
-                render(self)
+            if updated or first:
+                render()
+                first = False
             elapsed = time() - ts
             if elapsed < freq:
                 sleep(freq - elapsed)
@@ -144,12 +155,10 @@ class Engine(object):
 
 ENGINE = Engine()
 
+
 def get_engine():
     return ENGINE
 
+
 def run_until_empty():
     ENGINE.run_until_empty()
-
-
-
-

@@ -3,7 +3,7 @@
 MOVE = "MOVE"
 ROTATE = "ROTATE"
 
-TURTLE_DATA_SIZE = 8
+TURTLE_DATA_SIZE = 12
 
 DEFAUlT_MAX_SPEED = 200.0  # world distance/sec
 DEFAULT_MAX_TURN = 360.0   # degrees per second
