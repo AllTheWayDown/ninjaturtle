@@ -52,7 +52,7 @@ class TurtleModel():
         1.0,  # scale x
         1.0,  # scale y
         0.0,  # angle
-        3.0,  # speed
+        6.0,  # speed
         1.0,  # cos angle
         0.0,  # sin angle
         0.0,  # r

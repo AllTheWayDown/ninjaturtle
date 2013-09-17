@@ -42,6 +42,7 @@ class NinjaTurtle(object):
         self._max_speed = max_speed  # world distance/sec
         self._max_turn = max_turn    # degrees/sec
         self._calculate_speeds()
+        self._set_color = None
 
     def max_speed(self, max_speed=None):
         if max_speed is None:
@@ -94,11 +95,15 @@ class NinjaTurtle(object):
         else:
             self.queue_action(MOVE, self._throttled_move_speed, distance)
 
+    fd = forward
+
     def back(self, distance=None):
         if distance is None:
             self.queue_action(MOVE, -self._throttled_move_speed)
         else:
             self.queue_action(MOVE, -self._throttled_move_speed, -distance)
+
+    bk = back
 
     def left(self, angle=None):
         if angle is None:
@@ -106,23 +111,42 @@ class NinjaTurtle(object):
         else:
             self.queue_action(ROTATE, self._throttled_turn_speed, angle)
 
+    lt = left
+
     def right(self, angle):
         if angle is None:
             self.queue_action(ROTATE, -self._throttled_turn_speed)
         else:
             self.queue_action(ROTATE, -self._throttled_turn_speed, -angle)
 
+    rt = right
+
     def xcor(self):
         return self.data[0]
+
+    def setx(self, x):
+        self.data[0] = x
 
     def ycor(self):
         return self.data[1]
 
+    def sety(self, y):
+        self.data[1] = y
+
     def position(self):
         return self.data[0], self.data[1]
 
+    pos = position
+
     def heading(self):
         return self.data[4]
+
+    def setheading(self, heading):
+        diff = abs(heading - self.data[4])
+        if heading > self.data[4]:
+            self.left(diff)
+        else:
+            self.right(diff)
 
     @stdlib_docstring
     def shape(self, shape):
@@ -155,6 +179,25 @@ class NinjaTurtle(object):
         self.data[8] = color[0] / 255.0
         self.data[9] = color[1] / 255.0
         self.data[10] = color[2] / 255.0
+
+    def penup(self):
+        pass
+
+    def pendown(self):
+        pass
+
+    def hideturtle(self):
+        self._set_color = self.data[8:10]
+        self.pencolor('#ffffff')
+
+    ht = hideturtle
+
+    def showturtle(self):
+        if self._set_color:
+            self.data[8:10] = self._set_color
+        self._set_color = None
+
+    st = showturtle
 
 
 def interactive(func):
