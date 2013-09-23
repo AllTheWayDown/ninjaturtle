@@ -1,5 +1,4 @@
 import unittest
-from mock import Mock
 
 from ninjaturtle.ninja import NinjaTurtle
 from ninjaturtle.common import DEFAULT_MAX_SPEED
