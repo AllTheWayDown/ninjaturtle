@@ -1,46 +1,36 @@
+Warning: raw brain dump
+
+Currently rethinking NinjaTurtle module
+
+Would like to use the core animation engine already written for NinjaTurtle in
+all TurtlePower work. This mean that the stdlib turtle module just becomes
+a NinjaTurtle renderer.
+
+TurtlePower would remove all stdlib/tk related stuff, and just be about game
+APIs and features. NinjaTurtle would still be useable standalone an equivalent
+of the stdlib module.
 
 
-Base methods:
+Stdlib Renderer
+---------------
 
-_blankimage
-_image
-_createpoly
-_drawpoly
-_createline
-_drawline
-_update
-_iscolorstring
-_ontimer
-mainloop
+Just use goto() and setheading() to control turtle position, not
+forward/left/etc, as that will have already been calculated by the animation
+engine. So we just update the current position/heading. In future, we could
+write a better Tk based renderer if we want - this will do for now.
 
+Acceleration
+------------
 
-_delete
-_window_size
-_bgcolor
-_delay
-_write
-_onclick
-_onrelease
-_ondrag
-_onscreenclick
-_onkeyrelease
-_onkeypress
-_listen
-_createimage
-_drawimage
-_setbgpic
-_type
-_pointlist
-_setscrollregion
-_rescale
-_resize
-textinput
-numinput
+This means that the NinjaTurtle is free to be accelerated with C/GPU independant
+of renderer, which means we could improve the performance of turtles even when
+using the stdlib renderer, since we won't be useing it's maths (which is slow)
 
-Base attribuests:
-
-canvwidth
-canvheight
-xscale/yscale
-
-
+To enable zero-copy calls to c (and maybe parallelisation in The Future) of the
+animation, we probably want to use cffi arrays (or some stdlib alternative, if
+one can be found) to store the core turtle data. But the renderers still need to
+control how those are set up. E.g. TurGLES requires 1 array per shape. A Tk
+render would just need one array for all turtles. So, if we have an accelerated
+tick() function, it will need to get the arrays from the renderer and pass them
+to C. For that to work, the command queue stuff will need to be c compatible,
+too.  Not sure how yet. Will worry about it later :)

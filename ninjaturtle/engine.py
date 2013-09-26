@@ -93,7 +93,7 @@ class Engine(object):
 
     def __init__(self, renderer=None):
         if renderer is None:
-            renderer = DummyRender()
+            renderer = DummyRender(self)
         self.renderer = renderer
         self.turtles = []
         self.actions = []
