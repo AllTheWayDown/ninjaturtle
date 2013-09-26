@@ -6,7 +6,7 @@ from turtle import Turtle as stdlib_turtle
 from ninjaturtle.common import (
     MOVE,
     ROTATE,
-    DEFAUlT_MAX_SPEED,
+    DEFAULT_MAX_SPEED,
     DEFAULT_MAX_TURN,
 )
 from ninjaturtle.tk_colors import COLORS
@@ -31,7 +31,7 @@ class NinjaTurtle(object):
     def __init__(
             self,
             engine,
-            max_speed=DEFAUlT_MAX_SPEED,
+            max_speed=DEFAULT_MAX_SPEED,
             max_turn=DEFAULT_MAX_TURN):
 
         self.engine = engine

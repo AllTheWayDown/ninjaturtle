@@ -35,8 +35,8 @@ class DummyRender(BaseRenderer):
         for t in engine.turtles:
             print(t)
 
-    def create_turtle_data(self):
-        return [0] * TURTLE_DATA_SIZE
+    def create_turtle_data(self, shape, turtle):
+        return None, [0] * TURTLE_DATA_SIZE
 
     def set_shape(self, id, shape):
         pass

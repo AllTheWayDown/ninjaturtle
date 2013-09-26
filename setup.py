@@ -28,5 +28,5 @@ setup(
         "Topic :: Education",
         "Topic :: Games/Entertainment :: Simulation",
     ],
-    test_suite="ninjaturtle.tests"
+    test_suite="tests"
 )
