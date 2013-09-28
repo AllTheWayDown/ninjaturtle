@@ -31,18 +31,15 @@ class TkRenderer(BaseRenderer):
 
         self.turtles = dict()
 
-    def create_turtle_data(self, shape, defaults):
-        id, data = super(TkRenderer, self).create_turtle_data(shape, defaults)
-        turtle = RawTurtle(canvas=self.screen, shape=shape)
-        self.turtles[id] = TkTurtle(turtle, data)
-        return id, data, turtle
-
-    def set_shape(self, id, shape):
-        """Pass thru to RawTurtle"""
-        self.turtles[id].turtle.shape(shape)
+    def create_turtle(self, model):
+        backend = RawTurtle(canvas=self.screen)
+        model.backend = backend
+        self.turtles[model.id] = model
 
     def render(self):
-        for turtle, data in self.turtles.values():
+        for model in self.turtles.values():
+            data = model.data
+            turtle = model.backend
             if data[0] != turtle.xcor() or data[1] != turtle.ycor():
                 turtle.setpos(data[0], data[1])
             if turtle.heading() != data[4]:

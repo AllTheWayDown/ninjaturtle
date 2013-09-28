@@ -46,9 +46,8 @@ class NinjaTurtle(object):
 
         self.engine = engine
 
-        # model is position/animation object
-        # backend is the renderer specific turtle implementation
-        self.model = engine.create_turtle_model()
+        self.model = engine.create_turtle(self)
+        # inject renderer responsibilities
         self._inject_backend(self.model.backend)
 
         # shortcuts

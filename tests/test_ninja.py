@@ -4,6 +4,7 @@ from ninjaturtle.ninja import NinjaTurtle
 from ninjaturtle.common import DEFAULT_MAX_SPEED
 from ninjaturtle.engine import get_engine
 
+
 class NinjaTurtleTest(unittest.TestCase):
 
     def setUp(self):

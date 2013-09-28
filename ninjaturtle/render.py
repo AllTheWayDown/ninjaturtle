@@ -1,8 +1,5 @@
 from __future__ import division, print_function, absolute_import
-
-import itertools
-
-from ninjaturtle.common import TURTLE_DATA_SIZE
+from ninjaturtle.turtleapi import RenderTurtleAPI
 
 
 class BaseRenderer(object):
@@ -14,22 +11,27 @@ class BaseRenderer(object):
     to provide/emulate a similar inteface if they don't use a list-like one
     natively.
     """
-    id_seq = itertools.count()
 
-    def create_turtle_data(self, shape, defaults):
+    def create_turtle(self, model):
         """Allocate renderer specific storage for a turtle.
 
         This should look like a list of TURTLE_DATA_SIZE length."""
-        return next(self.id_seq), defaults[:]
-
-    def set_shape(self, id, shape):
-        """Used to inform the renderer of a new shape.
-
-        Currently, just shape name is supported, but it could also be an image
-        path or a list of coordinates."""
 
     def render(self):
         """Render the current state"""
+
+
+
+class DummyBackend(object):
+    """Backend turtle that does nothing"""
+
+
+def dummy(*args, **kwargs):
+    pass
+
+
+for api in RenderTurtleAPI:
+    setattr(DummyBackend, api, dummy)
 
 
 class DummyRender(BaseRenderer):
@@ -38,9 +40,9 @@ class DummyRender(BaseRenderer):
     def __init__(self, engine):
         self.engine = engine
 
+    def create_turtle(self, model):
+        model.backend = DummyBackend()
+
     def render(self):
         for t in self.engine.turtles:
             print(t)
-
-    def set_shape(self, id, shape):
-        pass

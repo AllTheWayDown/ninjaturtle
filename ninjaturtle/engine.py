@@ -1,4 +1,5 @@
 from __future__ import division, print_function, absolute_import
+import itertools
 from collections import deque
 from time import time, sleep
 from random import shuffle
@@ -20,6 +21,9 @@ from ninjaturtle.render import DummyRender
 
 class TurtleModel():
     """A turtle modelled in 2D space.
+
+    Acts as glue object between the frontend turtle object (NinjaTurtle) and
+    the backend renderer turtle object.
 
     The data attribute exposes a list like interface for turtle data that is
     used for maths calulations and rendering. Uses normal attribute for other
@@ -45,6 +49,7 @@ class TurtleModel():
     Convienience properties are slow causing ~3x speed penalty for get/set, and
     turtle model calculations are the slowest part of the whole thing.
     """
+    id_seq = itertools.count()
 
     DEFAULT_TURTLE = [
         0.0,  # X
@@ -62,13 +67,13 @@ class TurtleModel():
     ]
     DEFAULT_SHAPE = 'classic'
 
-    def __init__(self, id, data, backend):
-        self.id = id
-        self.data = data
-        self.backend = backend
+    def __init__(self, frontend):
+        """Just creates an empty model"""
+        self.id = next(self.id_seq)
+        self.frontend = frontend
+        self.backend = None
         self.actions = deque()
-        self.reset()
-        self.shape = self.DEFAULT_SHAPE
+        self.data = self.DEFAULT_TURTLE[:]
 
     def reset(self):
         for i, value in zip(range(TURTLE_DATA_SIZE), self.DEFAULT_TURTLE):
@@ -99,12 +104,17 @@ class Engine(object):
         self.turtles = []
         self.actions = []
 
-    def create_turtle_model(self):
-        id, data, backend = self.renderer.create_turtle_data(
-            TurtleModel.DEFAULT_SHAPE,
-            TurtleModel.DEFAULT_TURTLE,
-        )
-        model = TurtleModel(id, data, backend)
+    def create_turtle(self, frontend):
+        """Calls out to the renderer to allocate new backend turtle data.
+
+        The renderer has to be responsible for allocating the data, as for
+        OpenGL this is very importent. For other renderers, they can make it
+        simpler, but we need to provide this hook.
+
+        Note: passes a reference to the frontent turtle
+        """
+        model = TurtleModel(frontend)
+        self.renderer.create_turtle(model)
         self.turtles.append(model)
         return model
 
