@@ -1,6 +1,5 @@
 from __future__ import division, print_function, absolute_import
 import sys
-import functools
 from turtle import Turtle as stdlib_turtle
 
 from ninjaturtle.common import (
@@ -9,7 +8,7 @@ from ninjaturtle.common import (
     DEFAULT_MAX_SPEED,
     DEFAULT_MAX_TURN,
 )
-from ninjaturtle.tk_colors import COLORS
+from ninjaturtle.turtleapi import RenderTurtleAPI
 
 
 # model[0] - X position
@@ -20,6 +19,8 @@ from ninjaturtle.tk_colors import COLORS
 # model[5] - speed
 # model[6] - cos(radians(angle)) - a cache
 # model[7] - sin(radians(angle)) - a cache
+
+
 def stdlib_docstring(func):
     stdlib_func = getattr(stdlib_turtle, func.__name__)
     func.__doc__ = stdlib_func.__doc__
@@ -27,6 +28,15 @@ def stdlib_docstring(func):
 
 
 class NinjaTurtle(object):
+    """The main user interface to a Turtle.
+
+    Provides an indentical API to the stdlib turtle module, warts and all, plus
+    a few new ones. Responsibility for implemented the API is split in half.
+    NinjaTurtle directly provides all movement related APIs, and the renderer
+    implementation provides all drawing related APIs. Uses runtime object
+    composition and explicit method injection to do this, rather than multiple
+    inheritance with mixins. Because, eww.
+    """
 
     def __init__(
             self,
@@ -35,14 +45,29 @@ class NinjaTurtle(object):
             max_turn=DEFAULT_MAX_TURN):
 
         self.engine = engine
-        self.model = engine.create_model()
+
+        # model is position/animation object
+        # backend is the renderer specific turtle implementation
+        self.model = engine.create_turtle_model()
+        self._inject_backend(self.model.backend)
+
+        # shortcuts
         self.data = self.model.data
         self.queue_action = self.model.queue_action
 
         self._max_speed = max_speed  # world distance/sec
         self._max_turn = max_turn    # degrees/sec
         self._calculate_speeds()
+
+        # temporary hack
         self._set_color = None
+
+    def _inject_backend(self, backend):
+        """Inject methods from the provided RenderTurtleAPI into NinjaTurtle"""
+        self.backend = backend
+        for api in RenderTurtleAPI:
+            assert not hasattr(self, api)
+            setattr(self, api, getattr(backend, api))
 
     def max_speed(self, max_speed=None):
         if max_speed is None:
@@ -62,7 +87,7 @@ class NinjaTurtle(object):
         self._throttled_turn_speed = self._max_turn * throttle
 
     #-----------------------------------------------
-    # stdlib turtle api
+    # NinjaTurtle portion of stdlib turtle api
     #-----------------------------------------------
 
     _speed_strings = {
@@ -81,13 +106,14 @@ class NinjaTurtle(object):
             speed = speed.lower()
         if speed in self._speed_strings:
             speed = self._speed_strings[speed]
-        assert speed <= 10.0
+        elif 0.5 < speed < 10.5:
+            speed = int(round(speed))
+        else:
+            speed = 0
         if speed == 0:
             speed = sys.maxsize
         self.data[5] = speed
         self._calculate_speeds()
-
-    throttle = speed
 
     def forward(self, distance=None):
         if distance is None:
@@ -97,13 +123,13 @@ class NinjaTurtle(object):
 
     fd = forward
 
-    def back(self, distance=None):
+    def backward(self, distance=None):
         if distance is None:
             self.queue_action(MOVE, -self._throttled_move_speed)
         else:
             self.queue_action(MOVE, -self._throttled_move_speed, -distance)
 
-    bk = back
+    bk = back = backward
 
     def left(self, angle=None):
         if angle is None:
@@ -121,25 +147,45 @@ class NinjaTurtle(object):
 
     rt = right
 
-    def xcor(self):
-        return self.data[0]
-
     def setx(self, x):
+        # WRONG. Should animate
         self.data[0] = x
 
-    def ycor(self):
-        return self.data[1]
-
     def sety(self, y):
+        # WRONG. Should animate
         self.data[1] = y
 
-    def position(self):
-        return self.data[0], self.data[1]
+    def goto(self, x, y):
+        pass
 
-    pos = position
+    setpos = setposition = goto
 
-    def heading(self):
-        return self.data[4]
+    def settiltangle(self, ):
+        pass
+
+    def tiltangle(self, ):
+        pass
+
+    def tilt(self):
+        pass
+
+    def towards(self):
+        pass
+
+    def distance(self):
+        pass
+
+    def home(self):
+        pass
+
+    def reset(self):
+        pass
+
+    def circle(self):
+        pass
+
+    def clone(self):
+        pass
 
     def setheading(self, heading):
         diff = abs(heading - self.data[4])
@@ -148,73 +194,18 @@ class NinjaTurtle(object):
         else:
             self.right(diff)
 
-    @stdlib_docstring
-    def shape(self, shape):
-        new_data = self.engine.renderer.set_shape(self.model.id, shape)
-        self.model.data = new_data
-        self.data = new_data
+    seth = setheading
 
-    @stdlib_docstring
-    def shapesize(self, stretch_wid=None, stretch_len=None, outline=None):
-        if stretch_wid is not None:
-            self.data[2] = stretch_wid
-        if stretch_len is not None:
-            self.data[3] = stretch_len
+    def xcor(self):
+        return self.data[0]
 
-    turtlesize = shapesize
+    def ycor(self):
+        return self.data[1]
 
-    @stdlib_docstring
-    def pencolor(self, color):
-        if color in COLORS:
-            color = COLORS[color]
-        elif color[0] == '#':
-            color = (
-                int(color[1:3], 16),
-                int(color[3:5], 16),
-                int(color[5:7], 16)
-            )
-        else:
-            assert len(color) == 3
+    def position(self):
+        return self.data[0], self.data[1]
 
-        self.data[8] = color[0] / 255.0
-        self.data[9] = color[1] / 255.0
-        self.data[10] = color[2] / 255.0
+    pos = position
 
-    def penup(self):
-        pass
-
-    def pendown(self):
-        pass
-
-    def hideturtle(self):
-        self._set_color = self.data[8:10]
-        self.pencolor('#ffffff')
-
-    ht = hideturtle
-
-    def showturtle(self):
-        if self._set_color:
-            self.data[8:10] = self._set_color
-        self._set_color = None
-
-    st = showturtle
-
-
-def interactive(func):
-    @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
-        func(self, *args, **kwargs)
-        self.engine.run_until_empty()
-    return wrapper
-
-
-class InteractiveTurtle(NinjaTurtle):
-    forward = interactive(NinjaTurtle.forward)
-    back = interactive(NinjaTurtle.back)
-    left = interactive(NinjaTurtle.left)
-    right = interactive(NinjaTurtle.right)
-
-    shape = interactive(NinjaTurtle.shape)
-    shapesize = interactive(NinjaTurtle.shapesize)
-
-    pencolor = interactive(NinjaTurtle.pencolor)
+    def heading(self):
+        return self.data[4]

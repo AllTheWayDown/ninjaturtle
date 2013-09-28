@@ -35,7 +35,7 @@ class TkRenderer(BaseRenderer):
         id, data = super(TkRenderer, self).create_turtle_data(shape, defaults)
         turtle = RawTurtle(canvas=self.screen, shape=shape)
         self.turtles[id] = TkTurtle(turtle, data)
-        return id, data
+        return id, data, turtle
 
     def set_shape(self, id, shape):
         """Pass thru to RawTurtle"""

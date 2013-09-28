@@ -62,9 +62,10 @@ class TurtleModel():
     ]
     DEFAULT_SHAPE = 'classic'
 
-    def __init__(self, id, data):
+    def __init__(self, id, data, backend):
         self.id = id
         self.data = data
+        self.backend = backend
         self.actions = deque()
         self.reset()
         self.shape = self.DEFAULT_SHAPE
@@ -98,12 +99,12 @@ class Engine(object):
         self.turtles = []
         self.actions = []
 
-    def create_model(self):
-        id, data = self.renderer.create_turtle_data(
+    def create_turtle_model(self):
+        id, data, backend = self.renderer.create_turtle_data(
             TurtleModel.DEFAULT_SHAPE,
             TurtleModel.DEFAULT_TURTLE,
         )
-        model = TurtleModel(id, data)
+        model = TurtleModel(id, data, backend)
         self.turtles.append(model)
         return model
 
