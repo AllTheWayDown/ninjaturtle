@@ -4,10 +4,10 @@ from collections import deque
 from time import time, sleep
 from random import shuffle
 
-try:
-    from ninjaturtle import _vector as vector
-except ImportError:
-    from ninjaturtle import vector
+#try:
+#    from ninjaturtle import cvector as vector
+#except ImportError:
+from ninjaturtle import vector
 
 from ninjaturtle.common import (
     MOVE,
@@ -42,12 +42,15 @@ class TurtleModel():
     model[10] - blue
     model[11] - alpha
 
-    The reason of using a list like interface is performance with OpenGL.
-    This interface is not exposed directly to the user - just the NinjaTurtle
-    object and math functions.
-
-    Convienience properties are slow causing ~3x speed penalty for get/set, and
-    turtle model calculations are the slowest part of the whole thing.
+    The reason of using a list like interface is to allow for the possibility
+    of direct writing to a c-backed memory store. The benefit is that we can do
+    zero-copy calls out to C for acceration of animation, or OpenGL rendering,
+    The drawback is that it is slightly cumbersome to develop with has you have
+    to remember hardcoded offsets for different data arributes. But this
+    interface is not exposed directly to the user - just the NinjaTurtle object
+    and math functions. We could use properties, but they are slow, causing ~3x
+    speed penalty for get/set in cpython 3.3, and turtle model calculations are
+    the slowest part of the whole thing.
     """
     id_seq = itertools.count()
 
@@ -73,14 +76,17 @@ class TurtleModel():
         self.frontend = frontend
         self.backend = None
         self.actions = deque()
+        # use a standard list be default for now
         self.data = self.DEFAULT_TURTLE[:]
 
     def reset(self):
+        """Reset turtle to default position"""
         for i, value in zip(range(TURTLE_DATA_SIZE), self.DEFAULT_TURTLE):
             self.data[i] = value
         self.actions.clear()
 
     def queue_action(self, action, value, goal=None):
+        """Queue an action (rotate or move) to be calculated"""
         self.actions.append((action, value, goal))
 
     def __str__(self):
@@ -101,8 +107,7 @@ class Engine(object):
         if renderer is None:
             renderer = DummyRender(self)
         self.renderer = renderer
-        self.turtles = []
-        self.actions = []
+        self.turtles = {}
 
     def create_turtle(self, frontend):
         """Calls out to the renderer to allocate new backend turtle data.
@@ -111,24 +116,27 @@ class Engine(object):
         OpenGL this is very importent. For other renderers, they can make it
         simpler, but we need to provide this hook.
 
-        Note: passes a reference to the frontent turtle
+        Note: passes a reference to the frontend turtle
         """
         model = TurtleModel(frontend)
         self.renderer.create_turtle(model)
-        self.turtles.append(model)
+        self.turtles[model.id] = model
         return model
 
     def tick(self, dt):
         """run all the model calculations for dt seconds"""
 
-        shuffle(self.turtles)
+        turtles = list(self.turtles.items())
+        shuffle(turtles)
         updated = False
-        actions = self.ACTIONS
 
-        for turtle in self.turtles:
-            if turtle.actions:
+        for id, turtle in turtles:
+            actions = turtle.actions
+            if not actions:
+                turtle.frontend.get_actions()
+            if actions:
                 updated = True
-                action, step, goal = turtle.actions.popleft()
+                action, step, goal = actions.popleft()
                 value = step * dt
 
                 # are more steps needed to reach the goal
@@ -136,10 +144,10 @@ class Engine(object):
                     if abs(value) >= abs(goal) - 0.01:
                         value = goal
                     else:
-                        turtle.actions.appendleft((action, step, goal - value))
+                        actions.appendleft((action, step, goal - value))
 
                 # actually move the model
-                actions[action](turtle.data, value)
+                self.ACTIONS[action](turtle.data, value)
 
         return updated
 

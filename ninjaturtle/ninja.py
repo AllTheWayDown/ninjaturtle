@@ -30,13 +30,12 @@ def stdlib_docstring(func):
 class NinjaTurtle(object):
     """The main user interface to a Turtle.
 
-    Provides an indentical API to the stdlib turtle module, warts and all, plus
+    Provides the same API to the stdlib turtle module, warts and all, plus
     a few new ones. Responsibility for implemented the API is split in half.
-    NinjaTurtle directly provides all movement related APIs, and the renderer
-    implementation provides all drawing related APIs. Uses runtime object
-    composition and explicit method injection to do this, rather than multiple
-    inheritance with mixins. Because, eww.
-    """
+    NinjaTurtle directly provides all movement related APIs, plus new APIs, and
+    the renderer implementation provides all drawing related APIs. Uses runtime
+    object composition and explicit method injection to do this, rather than
+    multiple inheritance with mixins.   """
 
     def __init__(
             self,
@@ -51,7 +50,6 @@ class NinjaTurtle(object):
         self._inject_backend(self.model.backend)
 
         # shortcuts
-        self.data = self.model.data
         self.queue_action = self.model.queue_action
 
         self._max_speed = max_speed  # world distance/sec
@@ -68,22 +66,33 @@ class NinjaTurtle(object):
             assert not hasattr(self, api)
             setattr(self, api, getattr(backend, api))
 
+    # New NinjaTurtle methods
+    # -----------------------
+
     def max_speed(self, max_speed=None):
+        """Set's the max move speed for the turtle per second"""
         if max_speed is None:
             return self._max_speed
         self._max_speed = max_speed
         self._calculate_speeds()
 
     def max_turn(self, max_turn=None):
+        """Set's the max turn speed for the turtle in degrees per second"""
         if max_turn is None:
             return self._max_turn
         self._max_turn = max_turn
         self._calculate_speeds()
 
     def _calculate_speeds(self):
-        self._throttle = throttle = self.data[5]/10.0
+        self._throttle = throttle = self.model.data[5]/10.0
         self._throttled_move_speed = self._max_speed * throttle
         self._throttled_turn_speed = self._max_turn * throttle
+
+    def get_actions(self):
+        """Optional method to get turtle turtles actions.
+
+        To be used by other framework for programming multiple turtles moving
+        together"""
 
     #-----------------------------------------------
     # NinjaTurtle portion of stdlib turtle api
@@ -100,7 +109,7 @@ class NinjaTurtle(object):
     @stdlib_docstring
     def speed(self, speed=None):
         if speed is None:
-            return self.data[5]
+            return self.model.data[5]
         if hasattr(speed, 'lower'):
             speed = speed.lower()
         if speed in self._speed_strings:
@@ -111,7 +120,7 @@ class NinjaTurtle(object):
             speed = 0
         if speed == 0:
             speed = sys.maxsize
-        self.data[5] = speed
+        self.model.data[5] = speed
         self._calculate_speeds()
 
     def forward(self, distance=None):
@@ -148,11 +157,11 @@ class NinjaTurtle(object):
 
     def setx(self, x):
         # WRONG. Should animate
-        self.data[0] = x
+        self.model.data[0] = x
 
     def sety(self, y):
         # WRONG. Should animate
-        self.data[1] = y
+        self.model.data[1] = y
 
     def goto(self, x, y):
         pass
@@ -187,8 +196,8 @@ class NinjaTurtle(object):
         pass
 
     def setheading(self, heading):
-        diff = abs(heading - self.data[4])
-        if heading > self.data[4]:
+        diff = abs(heading - self.model.data[4])
+        if heading > self.model.data[4]:
             self.left(diff)
         else:
             self.right(diff)
@@ -196,15 +205,15 @@ class NinjaTurtle(object):
     seth = setheading
 
     def xcor(self):
-        return self.data[0]
+        return self.model.data[0]
 
     def ycor(self):
-        return self.data[1]
+        return self.model.data[1]
 
     def position(self):
-        return self.data[0], self.data[1]
+        return self.model.data[0], self.model.data[1]
 
     pos = position
 
     def heading(self):
-        return self.data[4]
+        return self.model.data[4]

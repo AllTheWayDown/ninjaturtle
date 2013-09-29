@@ -21,7 +21,6 @@ class BaseRenderer(object):
         """Render the current state"""
 
 
-
 class DummyBackend(object):
     """Backend turtle that does nothing"""
 

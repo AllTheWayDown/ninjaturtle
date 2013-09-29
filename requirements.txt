@@ -1,0 +1,11 @@
+# requirements laaid out as described in below because awesome
+# https://caremad.io/blog/setup-vs-requirement/
+--index-url https://pypi.python.org/simple/
+
+# testing deps
+mock
+
+# in dev we always want turgles available
+-e git+https://github.com/AllTheWayDown/turgles.git#egg=turgles
+
+-e .
