@@ -33,14 +33,18 @@ class TurtleModel():
     model[1]  - Y position
     model[2]  - X scale
     model[3]  - Y scale
-    model[4]  - angle/orientation in degrees
-    model[5]  - speed
-    model[6]  - cos(radians(angle)) - a cache
-    model[7]  - sin(radians(angle)) - a cache
-    model[8]  - red
-    model[9]  - green
-    model[10] - blue
-    model[11] - alpha
+    model[4]  - heading in degrees
+    model[5]  - orientation in degrees
+    model[6]  - cos(radians(heading)) - a cache
+    model[7]  - sin(radians(heading)) - a cache
+    model[8]  - cos(radians(orientation)) - a cache
+    model[9]  - sin(radians(orientation)) - a cache
+    model[10] - speed
+    model[11] - unused
+    model[12] - unused
+    model[13] - unused
+    model[14] - unused
+    model[15] - unused
 
     The reason of using a list like interface is to allow for the possibility
     of direct writing to a c-backed memory store. The benefit is that we can do
@@ -54,19 +58,33 @@ class TurtleModel():
     """
     id_seq = itertools.count()
 
+    #TODO: make this a dictionary, don't depend on turgles data structure
     DEFAULT_TURTLE = [
         0.0,  # X
         0.0,  # Y
         1.0,  # scale x
         1.0,  # scale y
-        0.0,  # angle
+        0.0,  # heading
+        0.0,  # orientation
+        1.0,  # cos heading
+        0.0,  # sin heading
+        1.0,  # cos orientation
+        0.0,  # sin orientation
         6.0,  # speed
-        1.0,  # cos angle
-        0.0,  # sin angle
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
         0.0,  # r
         0.0,  # g
         0.0,  # b
         1.0,  # alpha
+        0.0,  # r
+        0.0,  # g
+        0.0,  # b
+        1.0,  # alpha
+        1.0,  # border thinkness
     ]
     DEFAULT_SHAPE = 'classic'
 
@@ -77,12 +95,11 @@ class TurtleModel():
         # backend is set later by the renderer
         self.backend = None
         self.actions = deque()
-        # use a standard list be default for now
         self.data = self.DEFAULT_TURTLE[:]
 
     def reset(self):
         """Reset turtle to default position"""
-        for i, value in zip(range(TURTLE_DATA_SIZE), self.DEFAULT_TURTLE):
+        for i, value in enumerate(self.DEFAULT_TURTLE):
             self.data[i] = value
         self.actions.clear()
 
@@ -120,7 +137,8 @@ class Engine(object):
         Note: passes a reference to the frontend turtle
         """
         model = TurtleModel(frontend)
-        self.renderer.create_turtle(model)
+        self.renderer.create_turtle(
+            model, model.data, TurtleModel.DEFAULT_SHAPE)
         self.turtles[model.id] = model
         return model
 

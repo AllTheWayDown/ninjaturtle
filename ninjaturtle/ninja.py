@@ -11,16 +11,6 @@ from ninjaturtle.common import (
 from ninjaturtle.turtleapi import RenderTurtleAPI
 
 
-# model[0] - X position
-# model[1] - Y position
-# model[2] - X scale
-# model[3] - Y scale
-# model[4] - angle/orientation in degrees
-# model[5] - speed
-# model[6] - cos(radians(angle)) - a cache
-# model[7] - sin(radians(angle)) - a cache
-
-
 def stdlib_docstring(func):
     stdlib_func = getattr(stdlib_turtle, func.__name__)
     func.__doc__ = stdlib_func.__doc__
@@ -84,7 +74,7 @@ class NinjaTurtle(object):
         self._calculate_speeds()
 
     def _calculate_speeds(self):
-        self._throttle = throttle = self.model.data[5]/10.0
+        self._throttle = throttle = self.model.data[10]/10.0
         self._throttled_move_speed = self._max_speed * throttle
         self._throttled_turn_speed = self._max_turn * throttle
 
@@ -109,7 +99,7 @@ class NinjaTurtle(object):
     @stdlib_docstring
     def speed(self, speed=None):
         if speed is None:
-            return self.model.data[5]
+            return self.model.data[10]
         if hasattr(speed, 'lower'):
             speed = speed.lower()
         if speed in self._speed_strings:
@@ -120,7 +110,7 @@ class NinjaTurtle(object):
             speed = 0
         if speed == 0:
             speed = sys.maxsize
-        self.model.data[5] = speed
+        self.model.data[10] = speed
         self._calculate_speeds()
 
     def forward(self, distance=None):

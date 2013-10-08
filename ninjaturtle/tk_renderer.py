@@ -31,7 +31,8 @@ class TkRenderer(BaseRenderer):
 
         self.turtles = dict()
 
-    def create_turtle(self, model):
+    def create_turtle(self, model, init=None, shape='classic'):
+        # TODO use init
         backend = RawTurtle(canvas=self.screen)
         model.backend = backend
         self.turtles[model.id] = model
