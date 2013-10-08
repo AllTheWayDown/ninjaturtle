@@ -74,6 +74,7 @@ class TurtleModel():
         """Just creates an empty model"""
         self.id = next(self.id_seq)
         self.frontend = frontend
+        # backend is set later by the renderer
         self.backend = None
         self.actions = deque()
         # use a standard list be default for now
